@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-
+const query = require( '../services/db' );
 let users = [
   {
     id : 1,
@@ -20,45 +20,40 @@ let users = [
   },
 ]
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send(users);
+router.get('/', async function(req, res) {
+  
+    const user = await query(`SELECT * FROM UserData;`)
+    res.json(user);
+    // res.send(user);
 });
 
-router.post("/", (req, res) => {
-  let newUser = req.body;
-  users.push(newUser);
-  res.send({
-    message: "Post Successfull",
-    users,
-  });
+router.post("/", async(req, res) => {
+  let {UserID, Name, Age}= req.body;
+
+    await query(`INSERT INTO UserData VALUES ( ?, ?, ? );`,[UserID,Name,Age]);
+    res.send({
+      message: "Post Successfull",
+      newUser : req.body
+    });
 });
 
-router.put("/", (req, res) => {
-  let updatedUser = req.body;
+router.put("/", async(req, res) => {
+  let {UserID, Name, Age} = req.body;
 
-  let newUsers = users.map((userObj) => {
-    if (userObj.id == updatedUser.id) return updatedUser;
-    else return userObj;
-  });
-
-  res.send({
-    message: "Updated success",
-    newUsers,
-  });
+    await query(`UPDATE UserData SET Name=?, Age=? where UserID=?; `,[Name,Age,UserID] )
+    res.send({
+      message: "Update Successfull",
+      updatedUser : req.body
+    });
 });
 
-router.delete("/ ", (req, res) => {
-  let deletedUser = req.body;
+router.delete("/", async(req, res) => {
+  let {UserID} = req.body;
 
-  let newUsers = users.filter((userObj) => {
-    return userObj.id != deletedUser.id;
-  });
-
-  res.send({
-    message: "Delete success",
-    newUsers,
-  });
+    await query(`DELETE FROM UserData where UserID = ?`, [UserID])
+    res.send({
+      message: "Delete success",
+    });
 });
 
 module.exports = router;
